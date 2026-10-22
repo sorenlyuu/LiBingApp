@@ -1,0 +1,89 @@
+import {Client, Embed, EmbedBuilder, Message} from "discord.js"
+import Autoresponder from "../../autoresponder"
+import {RespondData, RespondType} from "../../../types/autorespond"
+import AppResources from "../../../res/app"
+import BotApplication from "../../../object/client"
+
+export default class DevCommand {
+	public static readonly command: string = `Dev Command`
+	public static readonly description: string = `?`
+	public static readonly wlrequire: boolean = true
+	public static readonly usage: string = `<PRE>dev [func] [...args]`
+	public static readonly triggers: string[] = ["dev", "d"]
+	public static readonly minimumArgs: number = 2
+
+	public static async run(app: BotApplication, msg: Message, args: string[]) {
+		let action = args[0]!
+		const actionData = DevCommands.list[action as keyof typeof DevCommands.list]
+		if (!actionData) {
+			return msg.reply(`Invalid action: ${action}`)
+		}
+		args = args.slice(1)
+		if (actionData.minArgs > args.length) {
+			return msg.reply(`Missing args`)
+		}
+		const rsp: string | EmbedBuilder = await actionData.func(app, args)
+		msg.reply(rsp instanceof EmbedBuilder ? {embeds: [rsp]} : {content: rsp})
+
+		return
+	}
+}
+
+class DevCommands {
+	public static list: {[action: string]: {minArgs: number; func: Function}} = {
+		autorespond: {
+			minArgs: 1,
+			func: DevCommands.autorespond,
+		},
+	}
+	public static async autorespond(client: BotApplication, args: string[]) {
+		const action = args[0]
+		switch (action) {
+			case "add":
+				const data: RespondData[] = Autoresponder.respondData
+				let [name, trigger, type, rsp] = args.slice(1, 5)
+				type = `RESPOND_${type!.toUpperCase()}`
+				if (!RespondType[type as keyof typeof RespondType]) {
+					return `Invalid type: Only react and reply are available.`
+				}
+				let existing: RespondData | number | any = data.findIndex((s) => s.name.toLowerCase().replace(` `, `_`) === name!.toLowerCase().replace(` `, `_`))
+				existing !== -1
+					? existing
+					: (() => {
+							data.push({
+								name: name,
+								triggers: [],
+								respondType: RespondType[type as keyof typeof RespondType],
+								response: rsp,
+							} as RespondData)
+							existing = data.length - 1
+						})()
+				if (data[existing]!.triggers.includes(trigger!)) {
+					return `The trigger already exists anyways. So i'm ignoring your command`
+				}
+				data[existing]!.triggers.push(trigger!)
+				AppResources.save(data, `autorespond`)
+				Autoresponder.refresh()
+				return `Successfully added \n\`\`\`json\n${JSON.stringify(data[existing], null, 4)}\n\`\`\``
+			case "remove":
+				let e = Autoresponder.respondData
+				let id = args[1]
+				let index = e.findIndex((s) => s.name === id)
+				if (index !== -1) {
+					e.splice(index, 1)
+				} else {
+					return `${id} isnt even a thing`
+				}
+				AppResources.save(e, `autorespond`)
+				Autoresponder.refresh()
+				return `Successfully removed ${id}`
+			case "view":
+				let s = Autoresponder.respondData
+				const embed = new EmbedBuilder().setTitle(`My autoresponders`).setThumbnail(client.client.user!.displayAvatarURL())
+				s.forEach((v) => {
+					embed.addFields({inline: true, name: v.name, value: `Triggered by: ${v.triggers.join(", ")}\nResponseType: ${v.respondType}\nResponse: ${v.response}`})
+				})
+				return embed
+		}
+	}
+}
