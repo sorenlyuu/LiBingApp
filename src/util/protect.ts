@@ -21,6 +21,7 @@ export default class Protector {
 	}
 
 	public static decode(data: string) {
+		if (!this.PROTECT) return JSON.parse(data)
 		const input = Buffer.from(data, "base64")
 		const output = Buffer.alloc(input.length)
 

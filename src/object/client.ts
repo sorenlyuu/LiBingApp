@@ -17,7 +17,7 @@ export default class BotApplication {
 		const missingProperties: string[] = []
 		this.TOKEN = process.env.TOKEN ?? `${missingProperties.push("TOKEN")}`
 		this.ID = process.env.ID ?? `${missingProperties.push("ID")}`
-		this.PREFIX = process.env.PREFIX ?? `${missingProperties.push("PREFIX")}`
+		this.PREFIX = process.env.PREFIX ?? `${this.logger.warn(`There was no prefix set, so I am using the default which is -`)}-`
 		this.DEVELOPMENTWL = process.env.DEVELOPMENTWL?.split(",") ?? []
 		if (missingProperties.length > 0) {
 			this.logger.err(`.env is missing properties ${missingProperties.join(", ")}`)
