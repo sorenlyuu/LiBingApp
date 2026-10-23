@@ -20,7 +20,7 @@ export default class AppResources {
 			}
 			if (!existsSync(`${this.directory}/${defined}`)) {
 				const template = JSON.parse(readFileSync(`${this.templates}/${defined}.json`, `utf-8`))
-				writeFileSync(`${this.directory}/${defined}`, Protector.encode(template) as string)
+				writeFileSync(`${this.directory}/${defined}`, Protector.encode(template))
 				this.logger.log(`Made ${defined} data using template`)
 			}
 		})
@@ -30,7 +30,7 @@ export default class AppResources {
 		this.mk()
 		const way = path.join(this.directory, queryData)
 		if (!existsSync(way)) return
-		const data = Protector.decode(readFileSync(way, "utf-8"))
+		const data = Protector.decode(readFileSync(way))
 		return data
 	}
 
@@ -44,7 +44,7 @@ export default class AppResources {
 		this.mk()
 		const way = path.join(this.directory, query)
 		const s = Protector.encode(data)
-		writeFileSync(way, JSON.stringify(s), "utf-8")
+		writeFileSync(way, s)
 		return s
 	}
 }

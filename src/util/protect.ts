@@ -2,27 +2,28 @@ import "dotenv/config"
 import {existsSync, readFileSync, writeFileSync} from "fs"
 import {randomBytes} from "node:crypto"
 import Logger from "./log"
+import { appendFileSync } from "node:fs"
 
 // this is the part where i edit this and pretended it was from mihoyo
 export default class Protector {
 
 	private static readonly logger: Logger = new Logger(`PROT`)
 	private static SEED: number
-	private static PROTECT: boolean
+	public static PROTECT: boolean
 
 	public static init() {
-		if (!existsSync(`resources/seed`)) {
+		if (!process.env.SEED) {
 			const seed = randomBytes(4).readUInt32BE(0)
-			writeFileSync("resources/seed", seed.toString(), "utf-8")
+			appendFileSync(`.env`, `\nSEED=${seed}`, `utf-8`)
 		}
-		this.SEED = Number(readFileSync(`resources/seed`, "utf-8"))
+		this.SEED = Number(process.env.SEED)
 		this.PROTECT = Boolean(process.env.PROTECT)
 		this.logger.log(`Initialized`)
 	}
 
-	public static decode(data: string) {
-		if (!this.PROTECT) return JSON.parse(data)
-		const input = Buffer.from(data, "base64")
+	public static decode(data: Uint8Array) {
+		if (!this.PROTECT) return JSON.parse(Buffer.from(data).toString())
+		const input = Buffer.from(data)
 		const output = Buffer.alloc(input.length)
 
 		for (let i = 0; i < input.length; i++) {
@@ -31,22 +32,21 @@ export default class Protector {
 		}
 
 		try {
-			return JSON.parse(output.toString("utf8"))
+			return JSON.parse(output.toString())
 		} catch {
 			return
 		}
 	}
 
 	public static encode(data: Object) {
-		if (!this.PROTECT) return data
-		const encoded = Buffer.from(JSON.stringify(data))
-		const out = Buffer.alloc(encoded.length)
-
-		for (let i = 0; i < encoded.length; i++) {
+		const buffer = Buffer.from(JSON.stringify(data))
+		if (!this.PROTECT) return Buffer.from(buffer)
+		const out = Buffer.alloc(buffer.length)
+		for (let i = 0; i < buffer.length; i++) {
 			const key = (this.SEED >>> ((i % 4) * 8)) & 0xff
-			out[i] = encoded[i]! ^ key
+			out[i] = buffer[i]! ^ key
 		}
 
-		return out.toString("base64")
+		return out
 	}
 }

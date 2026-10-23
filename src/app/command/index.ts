@@ -19,7 +19,7 @@ export default class CommandHandler {
 		if (!isItCmd) return
 		const args = message.content.split(` `)
 		if (args.length < 1) return this.logger.warn(`For some reason it was a command but it has nothing at all`)
-		this.commandList.forEach((s) => {
+		this.commandList.forEach(async (s) => {
 			if (s.triggers.find((trigger) => trigger === args[0]!.replace(`-`, ``))) {
 				this.logger.log(`${message.author.username} used ${s.command}: ${args.join(" -")}`)
 				if (s.wlrequire && !this.app!.DEVELOPMENTWL.includes(message.author.id)) {
@@ -32,7 +32,9 @@ export default class CommandHandler {
 					this.logger.log(`but it was missing args`)
 					return
 				}
-				s.func(this.app, message, args.slice(1))
+				message.react(`⏳`)
+				await s.func(this.app, message, args.slice(1))
+				await message.reactions.cache.find(v => v.me)?.remove()
 				return
 			}
 		})

@@ -1,1 +1,8 @@
-[]
+[
+    {
+        "name": "AR_URLEMBED",
+        "triggers": ["youtube.com", "x.com", "vm.tiktok.com", "reddit.com", "youtu.be"],
+        "response": "",
+        "respondType": 3
+    }
+]
