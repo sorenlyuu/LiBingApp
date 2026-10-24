@@ -74,7 +74,6 @@ export default class AppResources {
 	 */
 	public static async save(data: Object, query: string) {
 		await this.mk()
-		this.logger.log(`Updated ${query}`)
 		const s = Protector.encode(data)
 		if (!this.USE_MONGO) {
 			const way = path.join(this.directory, query)
@@ -86,6 +85,7 @@ export default class AppResources {
 			}
 			await app.database.collection(`app`).updateOne({name: query}, {$set: {data: s}}, {upsert: true})
 		}
+		this.logger.log(`Updated ${query}`)
 		return s
 	}
 }

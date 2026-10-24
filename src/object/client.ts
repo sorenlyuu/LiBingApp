@@ -9,6 +9,8 @@ import {Db, MongoClient} from "mongodb"
 import {appendFileSync} from "fs"
 import EventHandler from "../events"
 import Protector from "../util/protect"
+import ButtonHandler from "../app/button"
+import ModalHandler from "../app/modal"
 
 export default class BotApplication {
 	public readonly TOKEN: string
@@ -49,6 +51,8 @@ export default class BotApplication {
 			await Protector.init()
 			await Autoresponder.init()
 			await CommandHandler.init()
+			await ButtonHandler.init()
+			await ModalHandler.init()
 			await TaskHandler.init()
 			this.logger.log(`All set, started ${this.client.user?.username}`)
 		})

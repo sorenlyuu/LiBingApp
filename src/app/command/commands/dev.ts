@@ -5,6 +5,7 @@ import AppResources from "../../../res/app"
 import BotApplication from "../../../object/client"
 import TaskHandler from "../../task"
 import app from "../../.."
+import UserData from "../../../res/user"
 
 export default class DevCommand {
 	public static readonly command: string = `Dev Command`
@@ -51,7 +52,12 @@ class DevCommands {
 		return `Ran birthday check task`
 	}
 	public static async dataview(args: string[]) {
-		const data = await AppResources.get(args[0]!)
+		let data 
+		if (args[0] === `app`) {
+			data = await AppResources.get(args[1]!)
+		} else if (args[0] === `userdata`) {
+			data = await UserData.get(args[1]!)
+		}
 		if (!data) return `No such query`
 		return "```"+JSON.stringify(data, null, 4)+"```"
 	}
