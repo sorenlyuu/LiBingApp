@@ -4,16 +4,25 @@ import Logger from "../../util/log"
 import AppResources from "../../res/app"
 import MessageCreateEvent from "../../events/evt/message"
 import BotApplication from "../../object/client"
+import {ServerConfig} from "../../types/servercfg"
 
 export default class Autoresponder {
 	public static readonly logger: Logger = new Logger(`AUTORESP`)
 	public static respondData: RespondData[] = []
+	public static guildRespondData: {[guild: string]: RespondData[]} = {}
 
 	public static event(message: Message) {
 		if (message.author.bot) return
-		this.respondData.forEach(async (s) => {
+		let respondData: RespondData[] = this.respondData
+		if (message.guildId) {
+			const guildRespondData = this.guildRespondData[message.guildId]
+			if (guildRespondData) {
+				respondData = respondData.concat(guildRespondData)
+			}
+		}
+		respondData.forEach(async (s) => {
 			if (s.triggers.some((trigger) => message.content.toLowerCase().includes(trigger.toLowerCase()))) {
-				switch (s.respondType) {
+				switch (s.respond_type) {
 					case RespondType.RESPOND_REPLY:
 						message.reply(s.response)
 						break
@@ -29,7 +38,7 @@ export default class Autoresponder {
 						await (message.channel as TextChannel).send(`${message.author.displayName} sent \`${url}\`\n${embedded}`)
 						break
 					default:
-						message.reply(`Unsupported response type ${s.respondType} (${s.response})`)
+						message.reply(`Unsupported response type ${s.respond_type} (${s.response})`)
 						break
 				}
 			} else return
@@ -38,6 +47,10 @@ export default class Autoresponder {
 
 	public static init(app: BotApplication) {
 		this.respondData = AppResources.get("autorespond")
+		const serverConfig: ServerConfig = AppResources.get("servercfg")
+		for (const [i, v] of Object.entries(serverConfig)) {
+			this.guildRespondData[i] = v.autoresponds
+		}
 		MessageCreateEvent.bind(this.event.bind(this))
 		this.logger.log(`Initialized`)
 	}

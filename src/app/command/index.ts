@@ -1,4 +1,4 @@
-import {Client, Message} from "discord.js"
+import {Client, Message, PermissionFlagsBits} from "discord.js"
 import {RespondData, RespondType} from "../../types/autorespond"
 import Logger from "../../util/log"
 import AppResources from "../../res/app"
@@ -22,19 +22,29 @@ export default class CommandHandler {
 		this.commandList.forEach(async (s) => {
 			if (s.triggers.find((trigger) => trigger === args[0]!.replace(`-`, ``))) {
 				this.logger.log(`${message.author.username} used ${s.command}: ${args.join(" -")}`)
+
 				if (s.wlrequire && !this.app!.DEVELOPMENTWL.includes(message.author.id)) {
 					message.react("❌")
 					this.logger.log(`but its dev only`)
 					return
 				}
+
+				if (s.permissionrequire) {
+					const guildUser = await message.guild?.members.fetch({user: message.author})
+					if (guildUser && !guildUser.permissions.has(s.permissionrequire)) {
+						this.logger.log(`but they had no permissions`)
+						message.reply(`You do not have permission to use this command`)
+						return
+					}
+				}
+
 				if (args.length < s.minimumArgs) {
-					message.reply(`Missing required args!`)
+					message.reply(`Usage: ${s.usage}`)
 					this.logger.log(`but it was missing args`)
 					return
 				}
-				message.react(`⏳`)
+
 				await s.func(this.app, message, args.slice(1))
-				await message.reactions.cache.find(v => v.me)?.remove()
 				return
 			}
 		})
@@ -55,7 +65,7 @@ export default class CommandHandler {
 					command: cmdcl.command,
 					description: cmdcl.description,
 					wlrequire: cmdcl.wlrequire,
-					usage: cmdcl.usage,
+					usage: cmdcl.usage.replace(`<PRE>`, this.app.PREFIX),
 					triggers: cmdcl.triggers,
 					minimumArgs: cmdcl.minimumArgs,
 					func: cmdcl.run,

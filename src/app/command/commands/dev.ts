@@ -3,6 +3,8 @@ import Autoresponder from "../../autoresponder"
 import {RespondData, RespondType} from "../../../types/autorespond"
 import AppResources from "../../../res/app"
 import BotApplication from "../../../object/client"
+import BirthdayTask from "../../task/tasks/birthday"
+import TaskHandler from "../../task"
 
 export default class DevCommand {
 	public static readonly command: string = `Dev Command`
@@ -35,6 +37,23 @@ class DevCommands {
 			minArgs: 1,
 			func: DevCommands.autorespond,
 		},
+		dataview: {
+			minArgs: 1,
+			func: DevCommands.dataview
+		},
+		bdcheck: {
+			minArgs: 0,
+			func: DevCommands.birthdayToday
+		}
+	}
+	public static async birthdayToday(client: BotApplication, args: string[]) {
+		TaskHandler.runningTasks[`birthday`].birthdayCheck(client)
+		return `Ran birthday check task`
+	}
+	public static async dataview(client: BotApplication, args: string[]) {
+		const data = AppResources.get(args[0]!)
+		if (!data) return `No such query`
+		return "```"+JSON.stringify(data, null, 4)+"```"
 	}
 	public static async autorespond(client: BotApplication, args: string[]) {
 		const action = args[0]
@@ -53,7 +72,7 @@ class DevCommands {
 							data.push({
 								name: name,
 								triggers: [],
-								respondType: RespondType[type as keyof typeof RespondType],
+								respond_type: RespondType[type as keyof typeof RespondType],
 								response: rsp,
 							} as RespondData)
 							existing = data.length - 1
@@ -81,7 +100,7 @@ class DevCommands {
 				let s = Autoresponder.respondData
 				const embed = new EmbedBuilder().setTitle(`My autoresponders`).setThumbnail(client.client.user!.displayAvatarURL())
 				s.forEach((v) => {
-					embed.addFields({inline: true, name: v.name, value: `Triggered by: ${v.triggers.join(", ")}\nResponseType: ${v.respondType}\nResponse: ${v.response}`})
+					embed.addFields({inline: true, name: v.name, value: `Triggered by: ${v.triggers.join(", ")}\nResponseType: ${v.respond_type}\nResponse: ${v.response}`})
 				})
 				return embed
 		}

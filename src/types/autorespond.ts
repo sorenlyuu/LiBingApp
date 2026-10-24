@@ -8,6 +8,6 @@ export enum RespondType {
 export interface RespondData {
 	name: string
 	triggers: string[]
-	respondType: RespondType,
+	respond_type: RespondType,
     response: string,
 }

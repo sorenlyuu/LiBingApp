@@ -4,6 +4,7 @@ import Logger from "../util/log"
 import ReadyEvent from "../events/evt/ready"
 import Autoresponder from "../app/autoresponder"
 import CommandHandler from "../app/command"
+import TaskHandler from "../app/task"
 
 export default class BotApplication {
 	public readonly TOKEN: string
@@ -30,6 +31,7 @@ export default class BotApplication {
 		ReadyEvent.bind(() => {
 			Autoresponder.init(this)
 			CommandHandler.init(this)
+			TaskHandler.init(this)
 			this.logger.log(`All set, started ${this.client.user?.username}`)
 		})
 	}

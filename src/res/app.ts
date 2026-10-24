@@ -8,7 +8,7 @@ export default class AppResources {
 	private static readonly directory: string = `resources/app/`
 	private static readonly templates: string = `src/res/template`
 	private static readonly logger: Logger = new Logger(`APPRESOURCE`)
-	private static readonly definedDataFile: string[] = ["autorespond"]
+	private static readonly definedDataFile: string[] = ["autorespond", "servercfg"]
 
 	public static mk() {
 		if (!existsSync(this.directory)) {
@@ -29,7 +29,7 @@ export default class AppResources {
 	public static get(queryData: string) {
 		this.mk()
 		const way = path.join(this.directory, queryData)
-		if (!existsSync(way)) return
+		if (!existsSync(way)) return this.logger.warn(`no such query ${queryData}`)
 		const data = Protector.decode(readFileSync(way))
 		return data
 	}
@@ -42,6 +42,7 @@ export default class AppResources {
 	 */
 	public static save(data: Object, query: string) {
 		this.mk()
+		this.logger.log(`Updated ${query}`)
 		const way = path.join(this.directory, query)
 		const s = Protector.encode(data)
 		writeFileSync(way, s)

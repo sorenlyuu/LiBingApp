@@ -2,11 +2,10 @@ import "dotenv/config"
 import {existsSync, readFileSync, writeFileSync} from "fs"
 import {randomBytes} from "node:crypto"
 import Logger from "./log"
-import { appendFileSync } from "node:fs"
+import {appendFileSync} from "node:fs"
 
 // this is the part where i edit this and pretended it was from mihoyo
 export default class Protector {
-
 	private static readonly logger: Logger = new Logger(`PROT`)
 	private static SEED: number
 	public static PROTECT: boolean
@@ -17,7 +16,7 @@ export default class Protector {
 			appendFileSync(`.env`, `\nSEED=${seed}`, `utf-8`)
 		}
 		this.SEED = Number(process.env.SEED)
-		this.PROTECT = Boolean(process.env.PROTECT)
+		this.PROTECT = process.env.PROTECT === `true`
 		this.logger.log(`Initialized`)
 	}
 
@@ -31,11 +30,7 @@ export default class Protector {
 			output[i] = input[i]! ^ key
 		}
 
-		try {
-			return JSON.parse(output.toString())
-		} catch {
-			return
-		}
+		return JSON.parse(output.toString())
 	}
 
 	public static encode(data: Object) {
