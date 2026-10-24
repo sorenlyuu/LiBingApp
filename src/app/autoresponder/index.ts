@@ -5,6 +5,7 @@ import AppResources from "../../res/app"
 import MessageCreateEvent from "../../events/evt/message"
 import BotApplication from "../../object/client"
 import {ServerConfig} from "../../types/servercfg"
+import app from "../.."
 
 export default class Autoresponder {
 	public static readonly logger: Logger = new Logger(`AUTORESP`)
@@ -45,9 +46,9 @@ export default class Autoresponder {
 		})
 	}
 
-	public static init(app: BotApplication) {
-		this.respondData = AppResources.get("autorespond")
-		const serverConfig: ServerConfig = AppResources.get("servercfg")
+	public static async init() {
+		this.respondData = await AppResources.get("autorespond")
+		const serverConfig: ServerConfig = await AppResources.get("servercfg")
 		for (const [i, v] of Object.entries(serverConfig)) {
 			this.guildRespondData[i] = v.autoresponds
 		}
@@ -55,8 +56,12 @@ export default class Autoresponder {
 		this.logger.log(`Initialized`)
 	}
 
-	public static refresh() {
-		this.respondData = AppResources.get(`autorespond`)
+	public static async refresh() {
+		this.respondData = await AppResources.get(`autorespond`)
+		const serverConfig: ServerConfig = await AppResources.get("servercfg")
+		for (const [i, v] of Object.entries(serverConfig)) {
+			this.guildRespondData[i] = v.autoresponds
+		}
 		this.logger.log(`Refreshed`)
 	}
 }

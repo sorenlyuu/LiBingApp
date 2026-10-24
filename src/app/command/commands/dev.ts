@@ -3,8 +3,8 @@ import Autoresponder from "../../autoresponder"
 import {RespondData, RespondType} from "../../../types/autorespond"
 import AppResources from "../../../res/app"
 import BotApplication from "../../../object/client"
-import BirthdayTask from "../../task/tasks/birthday"
 import TaskHandler from "../../task"
+import app from "../../.."
 
 export default class DevCommand {
 	public static readonly command: string = `Dev Command`
@@ -14,7 +14,7 @@ export default class DevCommand {
 	public static readonly triggers: string[] = ["dev", "d"]
 	public static readonly minimumArgs: number = 2
 
-	public static async run(app: BotApplication, msg: Message, args: string[]) {
+	public static async run(msg: Message, args: string[]) {
 		let action = args[0]!
 		const actionData = DevCommands.list[action as keyof typeof DevCommands.list]
 		if (!actionData) {
@@ -24,7 +24,7 @@ export default class DevCommand {
 		if (actionData.minArgs > args.length) {
 			return msg.reply(`Missing args`)
 		}
-		const rsp: string | EmbedBuilder = await actionData.func(app, args)
+		const rsp: string | EmbedBuilder = await actionData.func(args)
 		msg.reply(rsp instanceof EmbedBuilder ? {embeds: [rsp]} : {content: rsp})
 
 		return
@@ -46,16 +46,16 @@ class DevCommands {
 			func: DevCommands.birthdayToday
 		}
 	}
-	public static async birthdayToday(client: BotApplication, args: string[]) {
-		TaskHandler.runningTasks[`birthday`].birthdayCheck(client)
+	public static async birthdayToday(args: string[]) {
+		TaskHandler.runningTasks[`birthday`].birthdayCheck(app)
 		return `Ran birthday check task`
 	}
-	public static async dataview(client: BotApplication, args: string[]) {
-		const data = AppResources.get(args[0]!)
+	public static async dataview(args: string[]) {
+		const data = await AppResources.get(args[0]!)
 		if (!data) return `No such query`
 		return "```"+JSON.stringify(data, null, 4)+"```"
 	}
-	public static async autorespond(client: BotApplication, args: string[]) {
+	public static async autorespond(args: string[]) {
 		const action = args[0]
 		switch (action) {
 			case "add":
@@ -81,7 +81,7 @@ class DevCommands {
 					return `The trigger already exists anyways. So i'm ignoring your command`
 				}
 				data[existing]!.triggers.push(trigger!)
-				AppResources.save(data, `autorespond`)
+				await AppResources.save(data, `autorespond`)
 				Autoresponder.refresh()
 				return `Successfully added \n\`\`\`json\n${JSON.stringify(data[existing], null, 4)}\n\`\`\``
 			case "remove":
@@ -93,12 +93,12 @@ class DevCommands {
 				} else {
 					return `${id} isnt even a thing`
 				}
-				AppResources.save(e, `autorespond`)
+				await AppResources.save(e, `autorespond`)
 				Autoresponder.refresh()
 				return `Successfully removed ${id}`
 			case "view":
 				let s = Autoresponder.respondData
-				const embed = new EmbedBuilder().setTitle(`My autoresponders`).setThumbnail(client.client.user!.displayAvatarURL())
+				const embed = new EmbedBuilder().setTitle(`My autoresponders`).setThumbnail(app.client.user!.displayAvatarURL())
 				s.forEach((v) => {
 					embed.addFields({inline: true, name: v.name, value: `Triggered by: ${v.triggers.join(", ")}\nResponseType: ${v.respond_type}\nResponse: ${v.response}`})
 				})

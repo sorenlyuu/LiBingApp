@@ -1,3 +1,4 @@
+import app from "../../.."
 import BotApplication from "../../../object/client"
 import AppResources from "../../../res/app"
 import {ServerConfig} from "../../../types/servercfg"
@@ -6,7 +7,7 @@ import cron from "node-cron"
 export default class BirthdayTask {
 	private  static readonly logger: Logger = new Logger(`BIRTHDAYTASK`)
 
-	public static async announce(app: BotApplication, msg: string, channelId: string) {
+	public static async announce(msg: string, channelId: string) {
 		const channel = await app.client.channels.fetch(channelId)
 		if (!channel) return
 		if (channel.isSendable()) {
@@ -16,26 +17,26 @@ export default class BirthdayTask {
 		return
 	}
 
-	public static async birthdayCheck(app: BotApplication) {
+	public static async birthdayCheck() {
 		const date = new Date()
 		const day = String(date.getDate()).padStart(2, `0`)
 		const month = String(date.getMonth() + 1).padStart(2, `0`)
 		const dateKey = `${day}/${month}`
-		const servers: ServerConfig = AppResources.get(`servercfg`)
+		const servers: ServerConfig = await AppResources.get(`servercfg`)
 		for (const [i, v] of Object.entries(servers)) {
 			const birthdayData = v.birthdays
 			const birthdays = birthdayData.filter((s) => s.date === dateKey)
 			birthdays.forEach((s) => {
-				this.announce(app, `Happy birthday to ${s.name}!`, v.chnl_birthday_annc)
+				this.announce(`Happy birthday to ${s.name}!`, v.chnl_birthday_annc)
 			})
 		}
 	}
 
-	public static async run(app: BotApplication) {
+	public static async run() {
 		cron.schedule(
 			"0 0 * * *",
 			() => {
-				this.birthdayCheck(app)
+				this.birthdayCheck()
 			},
 			{timezone: Intl.DateTimeFormat().resolvedOptions().timeZone},
 		)

@@ -6,16 +6,16 @@ export default class Logger {
         this.name = name
     }
 
-    public log(text: string) {
-        console.log(`[${this.name}] ${text}`)
+    public log(...text: string[]) {
+        console.log(`[${this.name}] ${text.join(" ")}`)
     }
 
-    public err(error: string) {
-        throw new Error(`[${this.name}] ERROR\n${error}`)
+    public err(...error: string[]) {
+        throw new Error(`[${this.name}] ERROR\n${error.join(" ")}`)
     }
 
-    public warn(warning: string) {
-        console.log(`[${this.name}] WARNING\n${warning}`)
+    public warn(...warning: string[]) {
+        console.log(`[${this.name}] WARNING\n${warning.join(" ")}`)
     }
 
 }

@@ -20,7 +20,7 @@ export default class ConfigCommand {
 	public static readonly minimumArgs: number = 2
 	private static readonly supportedFields: string[] = ["chnl_birthday_annc", "birthday", "autorespond"]
 
-	public static async run(app: BotApplication, msg: Message, args: string[]) {
+	public static async run (msg: Message, args: string[]) {
 		const setting = args[0]!
 		const value = args[1]!
 		if (!ConfigCommand.supportedFields.includes(setting)) return msg.reply(`Invalid setting`)
@@ -65,24 +65,24 @@ export default class ConfigCommand {
 				config.chnl_birthday_annc = value
 				break
 		}
-		const data: ServerConfig = AppResources.get(`servercfg`)
+		const data: ServerConfig = await AppResources.get(`servercfg`)
 		data[msg.guildId] = config
-		AppResources.save(data, `servercfg`)
-		if (setting === `autorespond`) Autoresponder.refresh()
+		await AppResources.save(data, `servercfg`)
+		if (setting === `autorespond`) await Autoresponder.refresh()
 		msg.reply(resultMsg)
 		return
 	}
 }
 
 async function getGuildCfg(guildId: string): Promise<Config> {
-	const data: ServerConfig = AppResources.get(`servercfg`)
+	const data: ServerConfig = await AppResources.get(`servercfg`)
 	if (!data[guildId]) {
 		data[guildId] = {
 			chnl_birthday_annc: "",
 			autoresponds: [],
 			birthdays: [],
 		}
-		AppResources.save(data, `servercfg`)
+		await AppResources.save(data, `servercfg`)
 	}
 	return data[guildId]
 }

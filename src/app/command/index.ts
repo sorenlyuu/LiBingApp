@@ -8,14 +8,14 @@ import BotApplication from "../../object/client"
 import {readdirSync} from "fs"
 import {createRequire} from "module"
 import path from "node:path"
+import app from "../.."
 
 export default class CommandHandler {
 	public static readonly logger: Logger = new Logger(`CMD`)
 	public static commandList: CommandInfo[] = []
-	private static app: BotApplication | undefined
 
 	public static async event(message: Message) {
-		const isItCmd = message.content.startsWith(this.app!.PREFIX)
+		const isItCmd = message.content.startsWith(app.PREFIX)
 		if (!isItCmd) return
 		const args = message.content.split(` `)
 		if (args.length < 1) return this.logger.warn(`For some reason it was a command but it has nothing at all`)
@@ -23,7 +23,7 @@ export default class CommandHandler {
 			if (s.triggers.find((trigger) => trigger === args[0]!.replace(`-`, ``))) {
 				this.logger.log(`${message.author.username} used ${s.command}: ${args.join(" -")}`)
 
-				if (s.wlrequire && !this.app!.DEVELOPMENTWL.includes(message.author.id)) {
+				if (s.wlrequire && !app.DEVELOPMENTWL.includes(message.author.id)) {
 					message.react("❌")
 					this.logger.log(`but its dev only`)
 					return
@@ -44,15 +44,14 @@ export default class CommandHandler {
 					return
 				}
 
-				await s.func(this.app, message, args.slice(1))
+				await s.func(message, args.slice(1))
 				return
 			}
 		})
 	}
 
-	public static async init(client: BotApplication) {
+	public static async init() {
 		this.logger.log("Starting command handler...")
-		this.app = client
 		const handlers = path.join(__dirname, "commands")
 		const require = createRequire(__filename)
 		const commands = readdirSync(handlers).filter((s) => /\.(ts|js)$/.test(s) && !s.endsWith(".d.ts"))
@@ -65,7 +64,7 @@ export default class CommandHandler {
 					command: cmdcl.command,
 					description: cmdcl.description,
 					wlrequire: cmdcl.wlrequire,
-					usage: cmdcl.usage.replace(`<PRE>`, this.app.PREFIX),
+					usage: cmdcl.usage.replace(`<PRE>`, app.PREFIX),
 					triggers: cmdcl.triggers,
 					minimumArgs: cmdcl.minimumArgs,
 					func: cmdcl.run,

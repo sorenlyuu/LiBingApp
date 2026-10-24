@@ -3,11 +3,12 @@ import Logger from "../util/log"
 import path from "path"
 import BotApplication from "../object/client"
 import { createRequire } from "module"
+import app from ".."
 
 export default class EventHandler {
     public static readonly logger: Logger = new Logger("EVT")
 
-    public static async initializeAll(app: BotApplication) {
+    public static async initializeAll() {
         this.logger.log("Starting event handlers...")
 
         const handlers = path.join(__dirname, "evt")

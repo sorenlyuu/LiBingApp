@@ -11,12 +11,10 @@ import path from "node:path"
 
 export default class TaskHandler {
     public static readonly logger: Logger = new Logger(`CMD`)
-    private static app: BotApplication | undefined
     public static runningTasks: {[taskName: string]: any} = {}
 
-    public static async init(client: BotApplication) {
+    public static async init() {
         this.logger.log("Loading tasks...")
-        this.app = client
         const handlers = path.join(__dirname, "tasks")
         const require = createRequire(__filename)
         const commands = readdirSync(handlers).filter((s) => /\.(ts|js)$/.test(s) && !s.endsWith(".d.ts"))

@@ -5,6 +5,10 @@ import ReadyEvent from "../events/evt/ready"
 import Autoresponder from "../app/autoresponder"
 import CommandHandler from "../app/command"
 import TaskHandler from "../app/task"
+import {Db, MongoClient} from "mongodb"
+import {appendFileSync} from "fs"
+import EventHandler from "../events"
+import Protector from "../util/protect"
 
 export default class BotApplication {
 	public readonly TOKEN: string
@@ -13,6 +17,8 @@ export default class BotApplication {
 	public readonly DEVELOPMENTWL: string[]
 	public readonly client: Client
 	public readonly logger: Logger = new Logger(`APP`)
+	public database: Db | undefined
+	private mongoCLI: MongoClient | undefined
 
 	constructor() {
 		const missingProperties: string[] = []
@@ -24,15 +30,38 @@ export default class BotApplication {
 			this.logger.err(`.env is missing properties ${missingProperties.join(", ")}`)
 			process.abort()
 		}
+
+		if (process.env.USE_MONGO === "true") {
+			let databaseUrl = process.env.DATABASE_URL
+			if (!databaseUrl) {
+				appendFileSync(`.env`, `\nDATABASE_URL=mongodb://localhost:27017`, `utf-8`)
+				databaseUrl = `mongodb://localhost:27017`
+			}
+			this.mongoCLI = new MongoClient(databaseUrl)
+			this.connectDatabase()
+		}
+
 		this.client = new Client({
 			partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 			intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.DirectMessages],
 		})
-		ReadyEvent.bind(() => {
-			Autoresponder.init(this)
-			CommandHandler.init(this)
-			TaskHandler.init(this)
+		ReadyEvent.bind(async () => {
+			await Protector.init()
+			await Autoresponder.init()
+			await CommandHandler.init()
+			await TaskHandler.init()
 			this.logger.log(`All set, started ${this.client.user?.username}`)
 		})
+	}
+
+	public async initializeEvents() {
+		await EventHandler.initializeAll()
+	}
+
+	public async connectDatabase() {
+		if (!this.mongoCLI) return
+		await this.mongoCLI.connect()
+		this.database = this.mongoCLI.db(`LiBingDB`)
+		this.logger.log(`Started mongoDB`)
 	}
 }
